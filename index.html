@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorting Visualizer (Beginner Friendly)</title>
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #0f172a;
+  color: white;
+}
+
+h1 { color: #38bdf8; }
+
+#array {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 300px;
+  margin: 20px;
+}
+
+.bar {
+  width: 30px;
+  margin: 4px;
+  background: #22c55e;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+}
+
+.bar.active {
+  background: red;
+}
+
+button {
+  margin: 5px;
+  padding: 10px;
+  border: none;
+  background: #38bdf8;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+input {
+  padding: 8px;
+}
+</style>
+</head>
+<body>
+
+<h1>Sorting Visualizer</h1>
+
+<input type="text" id="inputArray" placeholder="5,3,8,1 OR 5 3 8 1">
+<button onclick="setArray()">Set Array</button>
+<br><br>
+
+<button onclick="startSort('bubble')">Bubble Sort</button>
+<button onclick="startSort('selection')">Selection Sort</button>
+<button onclick="startSort('insertion')">Insertion Sort</button>
+
+<br><br>
+Speed: <input type="range" min="50" max="500" value="200" id="speed">
+
+<div id="array"></div>
+
+<script>
+let arr = [5,3,8,1]; // default values
+let steps = [];
+let currentStep = 0;
+
+// set array from input
+function setArray() {
+  let input = document.getElementById("inputArray").value;
+
+  // supports comma OR space
+  arr = input.split(/[,\s]+/).map(Number).filter(n => !isNaN(n));
+
+  steps = [];
+  currentStep = 0;
+  drawArray(arr);
+}
+
+// draw bars
+function drawArray(array, highlight = []) {
+  let container = document.getElementById("array");
+  container.innerHTML = "";
+
+  array.forEach((value, index) => {
+    let bar = document.createElement("div");
+    bar.classList.add("bar");
+
+    // highlight comparing bars
+    if (highlight.includes(index)) {
+      bar.classList.add("active");
+    }
+
+    // height of bar
+    bar.style.height = (value * 3 + 20) + "px";
+    bar.innerText = value;
+
+    container.appendChild(bar);
+  });
+}
+
+// save steps for animation
+function saveStep(array, highlight=[]) {
+  steps.push({array: [...array], highlight});
+}
+
+// bubble sort
+function bubbleSort(array) {
+  let a = [...array];
+
+  for (let i = 0; i < a.length; i++) {
+    for (let j = 0; j < a.length - i - 1; j++) {
+      saveStep(a, [j, j+1]);
+
+      if (a[j] > a[j+1]) {
+        let temp = a[j];
+        a[j] = a[j+1];
+        a[j+1] = temp;
+
+        saveStep(a, [j, j+1]);
+      }
+    }
+  }
+}
+
+// selection sort
+function selectionSort(array) {
+  let a = [...array];
+
+  for (let i = 0; i < a.length; i++) {
+    let min = i;
+
+    for (let j = i + 1; j < a.length; j++) {
+      saveStep(a, [min, j]);
+
+      if (a[j] < a[min]) {
+        min = j;
+      }
+    }
+
+    let temp = a[i];
+    a[i] = a[min];
+    a[min] = temp;
+
+    saveStep(a, [i, min]);
+  }
+}
+
+// insertion sort
+function insertionSort(array) {
+  let a = [...array];
+
+  for (let i = 1; i < a.length; i++) {
+    let key = a[i];
+    let j = i - 1;
+
+    while (j >= 0 && a[j] > key) {
+      a[j+1] = a[j];
+      j--;
+
+      saveStep(a, [j, j+1]);
+    }
+
+    a[j+1] = key;
+    saveStep(a, [j+1]);
+  }
+}
+
+// start sorting
+function startSort(type) {
+  steps = [];
+
+  if (type === 'bubble') bubbleSort(arr);
+  if (type === 'selection') selectionSort(arr);
+  if (type === 'insertion') insertionSort(arr);
+
+  currentStep = 0;
+  play();
+}
+
+// play animation
+function play() {
+  if (currentStep >= steps.length) return;
+
+  drawArray(steps[currentStep].array, steps[currentStep].highlight);
+  currentStep++;
+
+  setTimeout(play, document.getElementById("speed").value);
+}
+
+// show initial array
+window.onload = () => {
+  drawArray(arr);
+};
+</script>
+
+</body>
+</html>
